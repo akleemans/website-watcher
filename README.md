@@ -5,6 +5,7 @@ Get a Telegram notification when a certain term is present (or absent) on a webs
 ## Configuration
 
 Copy `config_template.json` to config.json and replace Bot ID and chat ID by your own.
+See [this article](https://medium.com/@ManHay_Hong/how-to-create-a-telegram-bot-and-send-messages-with-python-4cf314d9fa3e) on how to create a new Telegram bot.
 
 Then, configure your `sites` as follows:
 
