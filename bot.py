@@ -3,7 +3,6 @@
 
 import json
 import time
-import urllib.request
 
 import lxml.html as lh
 import requests
@@ -13,15 +12,14 @@ def download(url: str) -> str:
     """ Download data with throttling """
     print('[tools.py::download] Fetching', url)
     time.sleep(1)
-    headers = {'user-agent': 'akleemans-scrape-notify-bot/1.0'}
-    content = requests.get(url, headers=headers).text
+    content = requests.get(url).text
     return content
 
 
 def send_telegram(message: str, bot_token: str, bot_chatID: str) -> None:
     """ Send a message via Telegram bot """
-    send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=Markdown&text=' + message + '&disable_web_page_preview=True'
-    urllib.request.urlopen(send_text)
+    url = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=Markdown&text=' + message + '&disable_web_page_preview=True'
+    requests.get(url)
 
 
 def check_sites() -> None:
@@ -39,7 +37,12 @@ def check_sites() -> None:
         selector = site['selector']
         print('[bot.py] Checking site:', url)
 
-        content = download(url)
+        try:
+            content = download(url)
+        except:
+            print('[bot.py] Error while fetching site, skipping for now')
+            continue
+
         content_part = content
         if selector != '':
             tree = lh.fromstring(content)
@@ -51,7 +54,7 @@ def check_sites() -> None:
 
         if (term in content_part and notify_on == 'present') or (
             term not in content_part and notify_on == 'absent'):
-            message = 'Term ' + term + ' ' + notify_on + ' on site ' + url
+            message = 'Term <' + term + '> ' + notify_on + ' on site ' + url
             send_telegram(message, bot_token, bot_chatID)
 
     print('[bot.py] Finish')
