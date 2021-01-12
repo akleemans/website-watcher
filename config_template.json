@@ -1,0 +1,12 @@
+{
+  "bot_token": "foo:bar",
+  "bot_chatID": "12345678",
+  "sites": [
+    {
+      "url": "https://www.digitec.ch/de/s1/product/sony-playstation-5-digital-edition-de-fr-it-en-spielkonsole-13329224",
+      "selector": "#pageContent",
+      "term": "Aktuell nicht lieferbar",
+      "notify_on": "absent"
+    }
+  ]
+}
