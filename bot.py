@@ -7,12 +7,18 @@ import time
 import lxml.html as lh
 import requests
 
+config_file = 'config.json'
+
 
 def download(url: str) -> str:
     """ Download data with throttling """
-    print('[tools.py::download] Fetching', url)
+    print('[download] Fetching', url)
     time.sleep(1)
-    content = requests.get(url).text
+    custom_headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept-Language': 'en-US,en;q=0.9'
+    }
+    content = requests.get(url, headers=custom_headers).text
     return content
 
 
@@ -25,17 +31,24 @@ def send_telegram(message: str, bot_token: str, bot_chatID: str) -> None:
 def check_sites() -> None:
     """ Check sites """
     print('[bot.py] Initializing, reading config')
-    with open('config.json') as config_file:
-        config = json.loads(config_file.read())
+    with open(config_file) as read_config_file:
+        config = json.loads(read_config_file.read())
     bot_token = config['bot_token']
     bot_chatID = config['bot_chatID']
 
-    for site in config['sites']:
+    for i in range(len(config['sites'])):
+        site = config['sites'][i]
+        name = site['name']
         url = site['url']
         term = site['term']
         notify_on = site['notify_on']
         selector = site['selector']
-        print('[bot.py] Checking site:', url)
+        enabled = site['enabled']
+        if not enabled:
+            print(f'Site {name} disabled, continuing')
+            continue
+
+        print(f'[bot.py] Checking site: {name} ({url})')
 
         try:
             content = download(url)
@@ -53,9 +66,16 @@ def check_sites() -> None:
             content_part = elements[0].text_content()
 
         if (term in content_part and notify_on == 'present') or (
-            term not in content_part and notify_on == 'absent'):
-            message = 'Term <' + term + '> ' + notify_on + ' on site ' + url
+                term not in content_part and notify_on == 'absent'):
+            print('Sending notification!')
+            message = f'Term <{term}> {notify_on} on site [{name}]({url})'
+            message = message.replace('&', '%26amp;')
             send_telegram(message, bot_token, bot_chatID)
+            # Disable after the message was sent
+            config['sites'][i]['enabled'] = False
+
+    with open(config_file, 'w') as write_config_file:
+        write_config_file.write(json.dumps(config, indent=2))
 
     print('[bot.py] Finish')
 

@@ -86,3 +86,4 @@ env.bak/
 venv.bak/
 
 config.json
+.idea/
